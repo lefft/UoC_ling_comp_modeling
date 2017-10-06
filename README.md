@@ -4,7 +4,7 @@
 
 <br><br>
 
-### paper 1: oct06/oct13
+### paper 1: oct06/oct20
 ###### Peloquin & Frank (2016), "Determining the alternatives for scalar implicature"
 
 <hr>
