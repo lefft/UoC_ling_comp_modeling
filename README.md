@@ -12,7 +12,7 @@
 - paper: [ [here](https://mindmodeling.org/cogsci2016/papers/0067/paper0067.pdf) ]
 - companion R package: [ [here](https://github.com/benpeloquin7/rrrsa) ] 
 - package vignette: [ [here](paper01_peloquin_frank2016/paper_and_notes/rrrsa-vignette.pdf) ] 
-- oct13 model walkthru: [ [NOT YET AVAILABLE](BLEHHHH) ] 
+- oct20 model walkthru: [ [NOT YET AVAILABLE](BLEHHHH) ] 
 
 <br>
 
