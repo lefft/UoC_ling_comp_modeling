@@ -1,14 +1,82 @@
 ---
-title: "Determining the alternatives for scalar implicature"
-subtitle: "Peloquin & Frank (2016)"
-author: "timothy leffel"
-date: "oct20/2017"
+title: "Model Walkthru for Peloquin & Frank (2016)"
+subtitle: "\"Determining the alternatives for scalar implicature\""
+author: "timothy leffel, oct20/2017"
+output: 
+  html_document:
+    css: style.css
+    self_contained: no
 ---
 
+```{r setup}
+source("setup.r")
+```
+
+
+
+## Quick recap of paper 
+
+
+## Contents of model implementation package 
+
+Below is a listing of the contents of the `rrrsa::` package. 
+
+#### Five datasets 
+```{r}
+# FIVE DATASETS
+rsa_data <- list(
+  # from frank et al submitted:
+  frank = rrrsa::d_pragmods,
+  # from pelfrank16: 
+  pf2   = rrrsa::peloquinFrank_2Alts,
+  pf3   = rrrsa::peloquinFrank_3Alts,
+  pf4   = rrrsa::peloquinFrank_4Alts,
+  pf5   = rrrsa::peloquinFrank_5Alts
+)
+```
+
+
+#### Three helper functions 
+```{r}
+# THREE HELPER FUNCTIONS
+rsa_helper <- list(
+  # converts vec2 to whatever type vec1 is
+  convertVecType = rrrsa::rsa.convertVecType, 
+  # this is just `function(x) x/sum(x)` for positive `x`
+  normVec        = rrrsa::rsa.normVec, 
+  # just changes desired column names 
+  renameCol      = rrrsa::rsa.renameCol
+)
+```
+
+
+#### Six analysis functions 
+```{r}
+# SIX ANALYSIS FUNCTIONS
+rsa_model <- list(
+  # computes informativity given params `m_u`, `alpha`, `cost`
+  informativity  = rrrsa::rsa.informativity,
+  # computes utility given params `items`, `costs`, `alpha`
+  utility        = rrrsa::rsa.utility,
+  # wrapper that runs `depth`-many iterations of `rsa.fullRecursion()` 
+  reason         = rrrsa::rsa.reason,
+  # wrapper around `rsa.reason` that accepts input as a data frame 
+  runDf          = rrrsa::rsa.runDf,
+  # explores correlation between data and model preds for varying `alpha` 
+  tuneDepthAlpha = rrrsa::rsa.tuneDepthAlpha,
+  # main function implementing RSA model 
+  fullRecursion  = rrrsa::rsa.fullRecursion
+)
+```
+
+
+
+
+
+## An example in action 
 
 ```{r}
 ### ADAPTED CODE FROM PACKAGE VIGNETTE FOR DEMO OF fullRecursion()
-source("setup.r")
 
 # m/dat_pre ~~> matrix of semantics (rows=meaning (m rows), cols=words (n cols))
 # costs     ~~> ncol(m) vector of costs (default is 0 valued vector)
@@ -41,8 +109,14 @@ make_rsa_plot(dat_pre, dat_post)
 ```
 
 
+
+
+## Reproducing the paper results 
+
+#### get acquainted with the datasets, combine them 
+
 ```{r}
-# source("setup.r")
+source("setup.r")
 
 nams <- c("exp", "scale", "stars", "speaker.p", "words", "e11", "e6")
 #   1) quantityVarName :: "stars"
@@ -66,7 +140,11 @@ pf_data <- lapply(seq_along(pf_data), function(idx){
 
 str(pf_data)
 # pf_data %>% filter(words=="none") %>% View() # *** 
+```
 
+#### Specific example: Expt1, three alts, <*none, some, all*>
+
+```{r}
 # carve out the <none, some, all> scale (both expts 1 and 2) 
 # pf_data %>% filter(scale=="some_all") %>% View()
 pf3_NSA <- pf_data %>% 
@@ -111,6 +189,19 @@ make_rsa_plot(input_matrix, output_matrix)
 ```
 
 
+#### Specific example: Expt2, three alts, <*none, some, all*>
+
+
+
+
+
+#### Specific example: ...
+
+
+
+
+## Play around with parameters 
+
 
 ```{r}
 # play around with all the params!!! 
@@ -144,95 +235,143 @@ fullRecursion(input_matrix,
 
 
 
+
+
+
+
+
+
+
+
+
+
+## Concepts used in RSA models 
+
+#### primitive principles 
+
+- speech-acts are rational behaviors -- actions in **signaling games** 
+- utterances are selected by their **expected utility** 
+- the utility of an utterance is a function of its **informativity** and its **cost** 
+
+#### model of a conversational exchange 
+
+- a **speaker** $S_n$ wants to communicate some proposition 
+- $S_n$ selects utterance $u$ from a set of alternative utterances 
+- an actual ("pragmatic") **listener** ???
+- FINISH 
+
+
+## The mathematics underlying RSA models 
+
+The following equations are from Goodman & Frank's (2012) model specification. 
+
+
+#### equation 1 (GF2012)
+
+
+$$P(r_s|w, C) = \frac{P(w|r_s, C)\times P(r_s)}{\sum\limits_{r'\in C} P(w|r', C) \times P(r')}$$
+
+where 
+
+- $r_s$ is an intended referent (element of $C$), 
+- $C$ is a context (set of objects $r, r', ...\in C$), and 
+- $w$ is the word uttered by the speaker. 
+- The **prior** is $P(r_s)$, 
+- the **likelihood** is $P(w|r_s, C)$, and 
+- the **normalizing constant** is $\sum\limits_{r'\in C} P(w|r', C) \times P(r')$
+
+
+
+#### equation 2 (GF2012)
+
+$$P(w|r_s, C) = \frac{|w|^{-1}}{\sum\limits_{w'\in W} |w'|^{-1}}$$
+
+where 
+- $|w|$ is the number of objects in $C$ to which word $w$ could(?) apply, 
+- and $W$ is the set of words that apply to the intended referent $r_s$.  
+
+
+##### equation S1 (GF12 supplement)
+
+
+$$P(w|r_s, C) \propto e^{\alpha\times U(w; r_s, C)}$$
+
+where 
+
+- the **context** $C = \{o_1, ..., o_n\}$ is a set of objects 
+- the **vocabulary** is a set of words $V = \{w_1, ..., w_m\}$ 
+- each word $w\in V$ has a meaning $[\![ w ]\!] : C \rightarrow \{0, 1\}$ 
+- words are chosen in proportion to their expected utility 
+
+
+#### equation S2 -- utility (GF12 supplement)
+
+
+
+$$U(w; r_s, C) = I(w; r_s, C) - D(w)$$
+
+where 
+
+- $I(w; r_s, C)$ is the informativeness of utterance $w$ w.r.t. intended referent $r_s \in C$, and 
+- $D(w)$ is $w$'s cost (in $C$?). (for single words, $D : V \rightarrow \mathbb{R}^+$ is constant)
+
+
+##### surprisal (GF12 supplement)
+
+for a sample $x$ from a known distribution $p(x)$, the surprisal of $x$ is
+$$I_p(x) = -log(p(x))$$
+
+##### utility and surprisal (GF12 supplement)
+
+utility decreases with surprisal: 
+
+$$I(w; r_s, C) = -I_{\widetilde{w}_C}(r_s)$$
+
+where $\widetilde{w}_C$ is the distribution over objects that would come froma  aliteral interpretation of $w$ in context $C$. 
+
+
+
+##### equation S3 -- literal listener model derivation (GF12, supplementary materials)
+
+"if listeners interpret the utterance $w$ literally, assigning zero probability to objects for which the word is false, they assign equal probability to each object conssitent with $w$. This distribution over objects can be written:"
+
+$$\widetilde{w}_C(o) = 
+    \begin{cases}
+    \frac{1}{|w|} & \text{if } w(o) = true\\\\
+    0             & \text{otherwise }
+    \end{cases}
+$$
+
+##### equation S4 -- listener likelihood (GF12, supplement)
+
+equation S4 follows from S1-S3, which is equivalent to equation 2 (aka "the size principle")
+
+
+$$P(w|r_s, C) = \frac
+                    {e^{-(-\log(|w|^{-1}))}}
+                    {\sum\limits_{w'\in V \text{s.t. } w'(r_s) = true} e^{-(-\log(|w'|^{-1}))}}$$
+
+
+"Thus in our experiments, the speaker's abstract goal of being informative reduces to a simple formulation: whoose a word that applies to the referent and picks out a relatively smaller section of the context. Listeners may then use this model of a speaker as their likelihood function, to be combined with prior information about contextual salience as in Equation 1 in the main text."
+
+<!-- A `pragmatic listener` $P_{L_n}(m|u)$, reasons about intended meaning $m$ of an utterance $u$ by a `rational speaker` $P_{s_n}(u|m)$ who chooses an utterance according to the expected utility of an utterance $U(m;u)$. $\alpha$ is a decision noise parameter. -->
+
+<!-- $$P_{L_n}(m|u) \propto P_{S_n}(u|m)P(m)$$ -->
+<!-- $$P_{S_n} \propto e^{U(m;u)}$$ -->
+<!-- $$U(m;u) = -\alpha(-\log(P_{L_{n-1}}(m|u)) - C(u))$$ -->
+
+<!-- See Frank & Goodman (2012) and Goodman & Stuhmuller (2013) for the original descriptions of the RSA framework. Frank, et al. (Under Review) also provides a comprehensive presentation and evaluation of RSA. -->
+
+
+
+
+
+
+
+
+
+
 ```{r eval=FALSE, include=FALSE}
-lefftpack::lazy_setup()
-# devtools::install_github("benpeloquin7/rrrsa")
-library("rrrsa")
-
-### CONTENTS -------
-
-# SIX DATASETS
-
-# THREE HELPER FUNCTIONS
-
-# SIX ANALYSIS FUNCTIONS
-
-### DATASETS ------------------------------------------------------------------
-
-# note: on any dataset `df`, start by calling `?df` to see info 
-
-# example docs for `rrrsa::peloquinFrank_2Alts`
-# 
-#   This data set contains empirical literal listener semantics and pragmatic
-#   judgments for entailment items (two alternatives) from Peloquin & Frank 2016
-# 
-#   1) quantityVarName :: "stars"
-#   2) semanticsVarName :: "speaker.p"
-#   3) itemVarName :: "words"
-#   4) groupVarName :: "scale"
-#   other) experiment number :: "exp"
-#   other) Pragmatic judgments study 1 (e6), study 2 (e11)
-# 
-#   see also: https://github.com/langcog/scalar_implicature
-
-# 136x16 df, data from frank et al. (under review)
-rrrsa::d_pragmods
-
-# 50x7 df, data from pel+frk16, 
-rrrsa::peloquinFrank_2Alts
-
-# 75x7 df
-rrrsa::peloquinFrank_3Alts
-
-# 100x7 df
-rrrsa::peloquinFrank_4Alts
-
-# 125x7 df 
-rrrsa::peloquinFrank_5Alts
-
-
-
-
-### HELPER FUNCTIONS ----------------------------------------------------------
-
-# converts vec2 to whatever type vec1 is
-rrrsa::rsa.convertVecType(vec1, vec2)
-
-# this is just `function(x) x/sum(x)` for positive `x`
-rrrsa::rsa.normVec(v)
-
-# just changes desired column names 
-rrrsa::rsa.renameCol(df, currNames, replacements)
-
-
-
-
-### ANALYSIS FUNCTIONS --------------------------------------------------------
-
-### `rrrsa::rsa.informativity(m_u, alpha, cost)` -------
-# ifelse(m_u == 0, 0, exp(-alpha * (-log(m_u) - cost)))
-rrrsa::rsa.informativity(m_u, alpha, cost)
-
-
-### `rrrsa::rsa.utility(items, costs, alpha)` ------
-# rsa.normVec(mapply(rsa.informativity, items, costs, alpha = alpha))
-rrrsa::rsa.utility(items, costs, alpha)
-
-
-### `rrrsa::rsa.reason(m, costs, priors, depth, alpha)` ----
-rrrsa::rsa.reason(m, costs, priors, depth, alpha, usePriorEveryRecurse)
-
-
-### `rrrsa::rsa.runDf()` ----------------
-rrrsa::rsa.runDf(data, quantityVarName, semanticsVarName, 
-                 itemVarName, costsVarName, priorsVarName, depth, alpha,
-                 usePriorEveryRecurse)
-
-
-### `rrrsa::rsa.tuneDepthAlpha()` --------
-rrrsa::rsa.tuneDepthAlpha()
-
-
 ### rrrsa::rsa.fullRecursion(m, costs, priors, alpha) ------
 # `m` a matrix
 # `costs` a vector of costs, w length == ncol(m) (defaults to zeros)
@@ -260,11 +399,6 @@ lapply(c(2,4,5,10,100), function(ncols){
 })
 
 ```
-
-
-
-
-
 
 
 
