@@ -1,24 +1,150 @@
 ---
-title: "paper01 model walkthru"
-subtitle: "Peloquin & Frank (2016), 'Determining the alternatives for scalar implicature'"
+title: "Determining the alternatives for scalar implicature"
+subtitle: "Peloquin & Frank (2016)"
 author: "timothy leffel"
 date: "oct20/2017"
 ---
 
 
-### Gameplan
+```{r}
+### ADAPTED CODE FROM PACKAGE VIGNETTE FOR DEMO OF fullRecursion()
+source("setup.r")
 
-- recap of paper 
-- what the model is (broad strokes)
-- what the model does 
-- ...
+# m/dat_pre ~~> matrix of semantics (rows=meaning (m rows), cols=words (n cols))
+# costs     ~~> ncol(m) vector of costs (default is 0 valued vector)
+# priors    ~~> nrow(m) vector of priors (default is uniform)
+# alpha     ~~> decision hyper-param
+dat_pre <- matrix(
+  nrow=5, ncol=3, dimnames=list(paste0("row", 1:5), c("none","some","all")), 
+  data=c(1.0, .00, .00, 
+         .00, .00, .00, 
+         .25, .25, .25, 
+         .25, .00, .00, 
+         .00, .00,  1)
+)
+dat_pre_df <- rsa_matrix_to_df(dat_pre, response_colname="semantics")
 
-### Recap of Paper
+costs <- c(none=0, some=0, all=0)
+priors <- rnorm(nrow(dat_pre), mean=.5, sd=.1)
+alpha <- 1
 
-### Model 
+# rsa.fullRecursion(m=m, costs=rep(0, ncol(m)), priors=rep(1, nrow(m)), alpha=2)
+dat_post <- fullRecursion(m=dat_pre, 
+                          costs=rep(0,ncol(dat_pre)), 
+                          priors=rep(1,nrow(dat_pre)),
+                          alpha=alpha)
+
+knitr::kable(dat_pre, row.names=TRUE)
+knitr::kable(dat_post, row.names=TRUE)
+
+make_rsa_plot(dat_pre, dat_post)
+```
 
 
 ```{r}
+# source("setup.r")
+
+nams <- c("exp", "scale", "stars", "speaker.p", "words", "e11", "e6")
+#   1) quantityVarName :: "stars"
+#   2) semanticsVarName :: "speaker.p"
+#   3) itemVarName :: "words"
+#   4) groupVarName :: "scale"
+#   other) experiment number :: "exp"
+#   other) Pragmatic judgments study 1 (e6), study 2 (e11)
+sapply(rsa_data, dim)
+sapply(rsa_data, function(df){ identical(names(df), nams) })
+
+pf_data <- rsa_data[names(rsa_data)[names(rsa_data) != "frank"]]
+
+pf_data <- lapply(seq_along(pf_data), function(idx){
+  pf_data[[names(pf_data)[idx]]] %>% 
+    mutate(dataset = names(pf_data)[idx]) %>% 
+    mutate_if(is.factor, as.character) %>% 
+    rename(study1=e6, study2=e11)
+}) %>% 
+  (function(df_list) do.call(rbind, df_list))
+
+str(pf_data)
+# pf_data %>% filter(words=="none") %>% View() # *** 
+
+# carve out the <none, some, all> scale (both expts 1 and 2) 
+# pf_data %>% filter(scale=="some_all") %>% View()
+pf3_NSA <- pf_data %>% 
+  filter(dataset=="pf3") %>% 
+  filter(scale=="some_all") %>% 
+  select(-exp, -scale, -dataset) %>% 
+  select(stars, words, study1, study2, speaker.p) %>% 
+  arrange(stars, words) 
+
+# all response fields are 0 for none, across the whole scale...
+# pf3_NSA %>% filter(words=="none") %>% View() # *** 
+
+pf3_NSA_study1 <- pf3_NSA %>% 
+  select(stars, words, value=study1) %>% 
+  tidyr::spread(words, value) %>% 
+  set_rownames(.$stars) %>%  # `stars` now encoded as rownames
+  select(none, some, all) %>% 
+  as.matrix()
+
+
+# this is the semantic representation (prob dist) of each scalar item 
+input_matrix <- pf3_NSA_study1
+
+# need to make sure length matches ncol
+costs <- c(none=0, some=0, all=0)  
+
+# need to make sure length matches nrow 
+priors <- rnorm(nrow(input_matrix), mean=.5, sd=.1) 
+
+# parameter that fixes "how much the cost matters" 
+alpha <- 1
+
+# calculate the posterior distributions for each scalar item 
+output_matrix <- fullRecursion(
+  input_matrix, costs=costs, priors=priors, alpha=alpha
+)
+
+knitr::kable(input_matrix, row.names=TRUE)
+knitr::kable(output_matrix, row.names=TRUE)
+
+make_rsa_plot(input_matrix, output_matrix)
+```
+
+
+
+```{r}
+# play around with all the params!!! 
+rsa.reason(m=input_matrix, 
+           costs=rep(0, ncol(input_matrix)), 
+           priors=rep(1, nrow(input_matrix)), 
+           depth=2, 
+           alpha=1, 
+           usePriorEveryRecurse=FALSE)
+
+reason(input_matrix, 
+       costs=rep(0, ncol(input_matrix)), 
+       priors=rep(1, nrow(input_matrix)), 
+       alpha=1, 
+       depth=2, 
+       recycle_priors=FALSE)
+
+rsa.fullRecursion(input_matrix, 
+                  costs=rep(0, ncol(input_matrix)), 
+                  priors=rep(1, nrow(input_matrix)),
+                  alpha=1)
+fullRecursion(input_matrix, 
+              costs=rep(0, ncol(input_matrix)), 
+              priors=rep(1, nrow(input_matrix)),
+              alpha=1)
+
+```
+
+
+
+
+
+
+```{r eval=FALSE, include=FALSE}
 lefftpack::lazy_setup()
 # devtools::install_github("benpeloquin7/rrrsa")
 library("rrrsa")
@@ -134,4 +260,15 @@ lapply(c(2,4,5,10,100), function(ncols){
 })
 
 ```
+
+
+
+
+
+
+
+
+
+
+
 

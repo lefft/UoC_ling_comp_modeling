@@ -75,10 +75,10 @@ res <- as.data.frame(res) %>%
 
 ## Prep data
 pragmaticsTidied <- res %>%
-  gather(word, pragmatics, -quantity)
+  tidyr::gather(word, pragmatics, -quantity)
 semanticsTidied <- as.data.frame(m) %>%
   mutate(quantity = rownames(.)) %>%
-  gather(word, semantics, c(none, some, all))
+  tidyr::gather(word, semantics, c(none, some, all))
 fullData <- merge(pragmaticsTidied, semanticsTidied) %>%
   gather(type, value, c(pragmatics, semantics)) %>%
   mutate(quantity = as.numeric(quantity),

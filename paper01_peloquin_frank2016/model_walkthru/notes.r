@@ -38,7 +38,7 @@ library("rrrsa")
 # devtools::install_github("lefft/lefftpack")
 lefftpack::lazy_setup()
 
-# alternatively, uncomment the next line to load some packages we'll use 
+# alternatively, uncomment the next line to load the packages we'll use 
 # library("reshape2"); library("ggplot2"); library("magrittr"); library("dplyr")
 
 
@@ -46,12 +46,42 @@ lefftpack::lazy_setup()
 
 ### CONTENTS OF `rrrsa::` PACKAGE ---------------------------------------------
 
-# SIX DATASETS
+# FIVE DATASETS
+rsa_data <- list(
+  # from frank et al submitted
+  frank = rrrsa::d_pragmods,
+  # from pelfrank16 
+  pf2   = peloquinFrank_2Alts,
+  pf3   = peloquinFrank_3Alts,
+  pf4   = peloquinFrank_4Alts,
+  pf5   = peloquinFrank_5Alts
+)
 
 # THREE HELPER FUNCTIONS
+rsa_helper <- list(
+  # converts vec2 to whatever type vec1 is
+  convertVecType = rrrsa::rsa.convertVecType, 
+  # this is just `function(x) x/sum(x)` for positive `x`
+  normVec        = rrrsa::rsa.normVec, 
+  # just changes desired column names 
+  renameCol      = rrrsa::rsa.renameCol
+)
 
 # SIX ANALYSIS FUNCTIONS
-
+rsa_model <- list(
+  # computes informativity given params `m_u`, `alpha`, `cost`
+  informativity  = rrrsa::rsa.informativity,
+  # computes utility given params `items`, `costs`, `alpha`
+  utility        = rrrsa::rsa.utility,
+  # wrapper that runs `depth`-many iterations of `rsa.fullRecursion()` 
+  reason         = rrrsa::rsa.reason,
+  # wrapper around `rsa.reason` that accepts input as a data frame 
+  runDf          = rrrsa::rsa.runDf,
+  # explores correlation between data and model preds for various of `alpha` 
+  tuneDepthAlpha = rrrsa::rsa.tuneDepthAlpha,
+  # main function implementing RSA model 
+  fullRecursion  = rrrsa::rsa.fullRecursion
+)
 
 
 
@@ -149,7 +179,7 @@ rrrsa::rsa.informativity(m_u, alpha, cost)
 rrrsa::rsa.utility(items, costs, alpha)
 
 
-### `rrrsa::rsa.reason(m, costs, priors, depth, alpha)` ----
+### `rrrsa::rsa.reason(m, costs, priors, depth, alpha, usePriorEvery...)` -----
 rrrsa::rsa.reason(m, costs, priors, depth, alpha, usePriorEveryRecurse)
 
 
