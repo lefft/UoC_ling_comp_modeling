@@ -8,3 +8,7 @@ normVec <- function(v){
     return(v/sum(v, na.rm=TRUE))
   }
 }
+
+# vec <- 1:10
+# sum(normVec(vec))
+# plot(vec, normVec(vec))

@@ -1,0 +1,214 @@
+---
+title: "rrrsa imp"
+output: html_document
+---
+
+```{r setup}
+lefftpack::lazy_setup()
+```
+
+
+```{r normalize}
+normalize <- function(vec){
+  # all elements of `vec` must be positive or zero 
+  stopifnot(min(vec, na.rm=TRUE) >= 0)
+  # if `vec` is all zeros, just return it right back 
+  if (length(unique(vec))==1){
+    if (unique(vec)==0){
+      return(vec)
+    }
+  }
+  # normalize by dividing each element by the sum 
+  return(vec / sum(vec, na.rm=TRUE))
+}
+```
+
+
+```{r normalize_matrix}
+normalize_matrix <- function(mat, rows_or_cols){
+  if (!rows_or_cols %in% c("rows", "cols")){
+    message("gotta normalize over rows or cols mayne!")
+    return(NULL)
+  }
+  if (rows_or_cols=="rows"){
+    return(t(apply(mat, MARGIN=1, normalize)))
+  } 
+  if (rows_or_cols=="cols"){
+    return(apply(mat, MARGIN=2, normalize))
+  }
+}
+```
+
+
+
+```{r utility}
+utility <- function(items, costs, alpha){
+  # `items` is a vector of nums, each representing a word/item 
+  # `costs` must have same length as `items`, `alpha` a positive scalar 
+  
+  # apply `informativity()` to each item with specified costs and alpha. 
+  # then collect them all and return with the same shape/order as `items`
+  inform_unnorm <- mapply(informativity, prob=items, cost=costs, alpha=alpha)
+  
+  # normalization here is just dividing each number by the sum of them all 
+  inform_norm <- normalize(inform_unnorm)
+  
+  return(inform_norm)
+}
+
+```
+
+
+```{r informativity}
+informativity <- function(prob, cost, alpha){
+  # `prob` must be a probability, `alpha` a positive scalar 
+  inform <- ifelse(prob == 0, 0, exp(-alpha * (-log(prob) - cost)))
+  return(inform)
+}
+
+```
+
+
+```{r full_recursion}
+full_recursion <- function(mat, costs, priors, alpha){
+  
+  cost_mat <- matrix(
+    nrow=nrow(mat), ncol=ncol(mat), 
+    dimnames=dimnames(mat), 
+    data=rep(as.numeric(costs), times=1, each=nrow(mat))
+  )
+  
+  # the likelihood function is `utility()` 
+  likelihood <- t(sapply(1:nrow(mat), function(row){
+    utility(items=mat[row, ], costs=cost_mat[row, ], alpha=alpha)
+  })) 
+  
+  unnorm_posterior <- apply(likelihood, MARGIN=2, function(col) priors * col)
+  
+  posterior <- normalize_matrix(unnorm_posterior, rows_or_cols="cols")
+  
+  dimnames(posterior) <- list(rownames(mat), colnames(mat))
+  
+  return(posterior)
+}
+
+```
+
+
+```{r rsa_convenience}
+rsa_matrix_to_df <- function(rsa_matrix, response_colname){
+  out <- as.data.frame(rsa_matrix) %>% 
+    mutate(quantity = as.numeric(gsub("row", "", rownames(rsa_matrix)))) %>% 
+    melt(id.vars="quantity", variable.name="word") %>% 
+    mutate(word = as.character(word)) %>% 
+    arrange(quantity, word) 
+    # rename(semantics = "value")
+  
+  names(out)[names(out)=="value"] <- response_colname
+  
+  return(out)
+}
+
+
+make_rsa_plot <- function(input_matrix, output_matrix, facet_words=TRUE){
+  
+  input_df <- rsa_matrix_to_df(input_matrix, response_colname="semantics")
+  output_df <- rsa_matrix_to_df(output_matrix, response_colname="pragmatics")
+  
+  input_output <- 
+    full_join(input_df, output_df, by=c("quantity", "word")) %>% 
+    melt(id.vars=c("quantity", "word")) %>% 
+    rename(type = variable) %>% 
+    mutate(type = as.character(type))
+  
+  input_output$type <- factor(input_output$type, 
+                              levels=c("semantics","pragmatics"))
+  
+  if (facet_words){
+    the_plot <- 
+      ggplot(input_output, aes(x=quantity, y=value, color=type)) + 
+      geom_point(size=rel(.5)) + 
+      geom_line() + 
+      scale_color_manual(values=c("blue", "orange")) + 
+      facet_wrap(~word)
+    
+  } else {
+    the_plot <- 
+      ggplot(input_output, aes(x=quantity, y=value, color=word)) + 
+      geom_line() + 
+      facet_wrap(~type)
+  }
+  
+  return(the_plot)
+}
+
+rsaplot <- function(smat, costs, priors, alpha, facet_words=TRUE){
+  if (!all(colSums(smat)==1)){
+    smat <- normalize_matrix(smat, rows_or_cols="cols")
+  }
+  if (sum(priors)!=1){
+    priors <- normalize(priors)
+  }
+  pmat <- full_recursion(smat, costs, priors, alpha)
+  return(make_rsa_plot(smat, pmat, facet_words=facet_words))
+}
+
+
+```
+
+
+
+
+```{r semantics_matrix}
+words <- c("none","none_all","some","some_notall","most","all","not_all")
+costs <- setNames(object=c(1, 1, 1, 1, 1, 1, 1), nm=words)
+
+points <- 1:5
+priors <- normalize(rep(1, length(points))) 
+
+alpha <- 1
+
+semantics_unnorm <- matrix(
+  data=rep(NA, length(points)*length(words)), 
+  nrow=length(points), ncol=length(words), 
+  dimnames=list(paste0("row", points), words)
+)
+semantics_unnorm[, "none"]        <- c(1, 0, 0, 0, 0)
+semantics_unnorm[, "none_all"]    <- c(1, 0, 0, 0, 1)
+semantics_unnorm[, "some"]        <- c(0, 1, 1, 1, 1)
+semantics_unnorm[, "some_notall"] <- c(0, 1, 1, 1, 0)
+semantics_unnorm[, "most"]        <- c(0, 0, 1, 1, 1)
+semantics_unnorm[, "all"]         <- c(0, 0, 0, 0, 1)
+semantics_unnorm[, "not_all"]     <- c(1, 1, 1, 1, 0)
+semantics_unnorm
+
+
+rsaplot(semantics_unnorm, costs, priors, alpha)
+
+
+s_a_na <- matrix(
+  data=c(0,1,1,1,1,   0,0,0,0,1,    1,1,1,1,0), 
+  nrow=5, ncol=3, dimnames=list(paste0("row", 1:5), 
+                                c("some","all","not_all"))
+)
+rsaplot(s_a_na, costs=c(1,1,1), priors=rep(1, 5), alpha=1)
+
+s_a <- matrix(
+  data=c(0,1,1,1,1,   0,0,0,0,1), 
+  nrow=5, ncol=2, dimnames=list(paste0("row", 1:5), 
+                                c("some","all"))
+)
+rsaplot(s_a, costs=c(1,1), priors=rep(1, 5), alpha=1)
+
+s_na <- matrix(
+  data=c(0,1,1,1,1,   1,1,1,1,0), 
+  nrow=5, ncol=2, dimnames=list(paste0("row", 1:5), 
+                                c("some","not_all"))
+)
+rsaplot(s_na, costs=c(1,1), priors=rep(1, 5), alpha=1)
+
+
+
+
+```
+

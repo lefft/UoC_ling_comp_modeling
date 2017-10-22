@@ -156,8 +156,12 @@ semantics_matrix <- matrix(
 # priors    ~~> nrow(m) vector of priors (default is uniform)
 # alpha     ~~> decision hyper-param
 
+# dnorm(), qnorm(), pnorm() 
+# hist(rnorm(1000, mean=100, sd=1))
+
+# priors <- normVec(rnorm(nrow(semantics_matrix), mean=.5, sd=.1))
 costs <- c(none=0, some=0, all=0)
-priors <- rnorm(nrow(semantics_matrix), mean=.5, sd=.1)
+priors <- rep(.2, 5)
 alpha <- 1
 
 print(costs)
@@ -314,7 +318,6 @@ d_summary %>%
   facet_wrap(~scale, nrow=1) + 
   labs(title="reproduction of figure 5 from PF16")
 
-
 d_summary %>% ggplot(aes(x=stars, y=mean_study1, color=scale_pos)) + 
   geom_point() + 
   geom_line() + 
@@ -353,7 +356,8 @@ input_matrix <- pf3_NSA_study1
 costs <- c(none=0, some=0, all=0)  
 
 # need to make sure length matches nrow 
-priors <- rnorm(nrow(input_matrix), mean=.5, sd=.1) 
+# priors <- rnorm(nrow(input_matrix), mean=.5, sd=.1) 
+priors <- rep(.2, nrow(input_matrix))
 
 # parameter that fixes "how much the cost matters" 
 alpha <- 1
@@ -376,6 +380,45 @@ make_rsa_plot(input_matrix, output_matrix)
 
 ### 3.3 Specific example: [WHATEVER SEEMS MOST INTERESING!]
 
+```{r}
+### THIS CHUNK IS JUST A SANDBOXXXE ----- 
+
+# carve out a subset
+NSA <- pf_data %>% 
+  filter(dataset=="pf5") %>%
+  filter(scale=="some_all") %>% 
+  select(-exp, -scale, -dataset) %>% 
+  select(stars, words, study1, study2, speaker.p) %>% 
+  arrange(stars, words) 
+
+# this is the semantic representation (prob dist) of each scalar item 
+NSA_matrix <- NSA %>% 
+  # study1 or study2 or speaker.p -- still not sure which col! 
+  select(stars, words, value=study1) %>% 
+  tidyr::spread(words, value) %>% 
+  set_rownames(.$stars) %>%  # `stars` now encoded as rownames
+  select(none, some, little, most, all) %>% 
+  as.matrix()
+
+# need to make sure length matches ncol
+costs <- setNames(rep(0, ncol(NSA_matrix)), nm=colnames(NSA_matrix))
+
+# need to make sure length matches nrow 
+priors <- normVec(rep(1, nrow(NSA_matrix)))
+
+# parameter that fixes "how much the cost matters" 
+alpha <- 1
+
+# run an iteration
+NSA_pragmatics <- fullRecursion(NSA_matrix, costs, priors, alpha)
+
+# visualize result
+make_rsa_plot(NSA_matrix, NSA_pragmatics)
+```
+
+
+
+### 3.4 Steps for doing one full iteration 
 
 ```{r}
 ### STEPS FOR DOING ONE FULL ITERATION OF RSA MODEL 
@@ -442,16 +485,6 @@ fullRecursion(
   costs=costs, priors=priors, alpha=alpha
 )
 ```
-
-
-
-
-
-
-
-
-
-
 
 
 

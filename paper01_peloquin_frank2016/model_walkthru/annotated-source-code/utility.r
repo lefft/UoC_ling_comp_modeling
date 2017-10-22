@@ -11,6 +11,10 @@ utility <- function(items, costs, alpha){
   return(inform_norm)
 }
 
+# sapply(list(1,2,3,4), function(x) x^2)
+# lapply(list(1,2,3,4), function(x) x^2)
+
+# ?mapply()
 
 
 # ### ORIGINAL 

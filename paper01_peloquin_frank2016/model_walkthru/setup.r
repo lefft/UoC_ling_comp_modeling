@@ -6,8 +6,8 @@ source("annotated-source-code/utility.r")
 source("annotated-source-code/informativity.r")
 source("annotated-source-code/fullRecursion.r")
 source("annotated-source-code/reason.r")  
-# source("annotated-source-code/runDf.r") # DOES NOT EXISST HYETS!
 source("annotated-source-code/tuneDepthAlpha.r")
+# source("annotated-source-code/runDf.r") # DOES NOT EXISST HYETS!
 
 
 ### CONTENTS OF `rrrsa::` PACKAGE ---------------------------------------------
@@ -15,12 +15,12 @@ source("annotated-source-code/tuneDepthAlpha.r")
 # FIVE DATASETS
 rsa_data <- list(
   # from frank et al submitted
-  frank = d_pragmods,
+  frank = rrrsa::d_pragmods,
   # from pelfrank16 
-  pf2   = peloquinFrank_2Alts,
-  pf3   = peloquinFrank_3Alts,
-  pf4   = peloquinFrank_4Alts,
-  pf5   = peloquinFrank_5Alts
+  pf2   = rrrsa::peloquinFrank_2Alts,
+  pf3   = rrrsa::peloquinFrank_3Alts,
+  pf4   = rrrsa::peloquinFrank_4Alts,
+  pf5   = rrrsa::peloquinFrank_5Alts
 )
 
 # THREE HELPER FUNCTIONS
