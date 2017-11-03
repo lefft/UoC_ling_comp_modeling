@@ -1,12 +1,22 @@
 ---
-title: "rrrsa imp"
+title: "RSA sandbox"
+subtitle: "snippets and toy models (code here not tested extensively)"
+author: "timothy leffel // `tjleffel@gmail.com` // `http://lefft.xyz`"
+date: "updated nov03/2017"
 output: html_document
 ---
 
+### setup 
+
 ```{r setup}
 lefftpack::lazy_setup()
+# or use: 
+# library("magrittr"); library("dplyr"); library("reshape2"); library("ggplot2")
 ```
 
+
+
+### tweaks, doodles, etc. based on `rrrsa::` implementation 
 
 ```{r normalize}
 normalize <- function(vec){
@@ -79,6 +89,7 @@ full_recursion <- function(mat, costs, priors, alpha){
   )
   
   # the likelihood function is `utility()` 
+  # utility is just normalized informativity 
   likelihood <- t(sapply(1:nrow(mat), function(row){
     utility(items=mat[row, ], costs=cost_mat[row, ], alpha=alpha)
   })) 
@@ -207,8 +218,182 @@ s_na <- matrix(
 )
 rsaplot(s_na, costs=c(1,1), priors=rep(1, 5), alpha=1)
 
+```
+
+
+
+### A little calculus refresher
+
+```{r}
+# dnorm(x, mean=0, sd=1): height of unit normal density at x
+plot(dnorm, from=-2, to=2)
+
+points <- seq(from=-2, to=2, by=.1)
+
+# proportion of "area under the curve" within the boundaries 
+integrate(dnorm, lower=-1.96, upper=1.96)$value 
+integrate(dnorm, -Inf, Inf)$value 
+integrate(dnorm, -Inf, 0)$value; integrate(dnorm, 0, Inf)$value 
+
+# a little calculus refresher 
+dat <- data_frame(
+  point=points, 
+  norm_density=dnorm(points, mean=0, sd=1), 
+  integral_nd_nd=sapply(norm_density, function(x){
+    integrate(dnorm, lower=x-.05, upper=x+.05)$value
+  }), 
+  integral_nd_points=sapply(seq(from=-2, to=2, by=.1), function(x){
+    integrate(dnorm, lower=x-.05, upper=x+.05)$value
+  }), 
+  deriv_points=as.numeric(eval(deriv(~ dnorm(points), "points")))
+)
+dat %>% 
+  reshape2::melt(id.vars="point") %>% 
+  ggplot(aes(x=point, y=value, color=variable)) + 
+  geom_point() + facet_wrap(~variable, scales="free_y")
+
+# watch out -- since sum of points is (effectively) zero! 
+# sum(dat$point)
+lapply(dat, function(x) x/sum(x)) %>% lapply(sum)
+
+# plot(qnorm, from=-1, to=1)
+# plot(pnorm, from=-2, to=1)
+
+
+```
+
+
+
+```{r eval=FALSE, include=FALSE}
+### OLD CHUNK FROM PREVIOUS FIDDLE -- CONSOLIDATE AND/OR REMOVE AFTER REVIEWING
+
+### try out all funcs on some basic vals
+cost()                            # always maps to 1
+e()                               # euler's num
+eqn1(obj, utt, objects, words)    # .0952381
+eqn2(utt, obj, objects, words)    # .6666667
+
+s4_term(utt, objects)             # 1
+satisfies(obj, utt, objects)      # TRUE
+
+extension(utt, objects)           # "blue_circle"     
+extension("square", objects)      # "blue_square", "green_square"
+
+ll_interp(utt, obj, objects)     # TRUE
+prior_obj(obj, objects)          # .3333333
+prior_word(utt, words)           # .25
+
+words_applying_to_obj(words, obj, objects)               # "blue", "circle"
+
+prob_ref_given_word_in_context(obj, utt, objects, words) # .0952381
+prob_word_given_ref_in_context(utt, obj, objects, words) # .6666667
+
+sp_assertion(utt, obj, objects)  # word: "circle"; object: "blue_circle"; val=T
+
+# GOTTA FINALIZE DIST FUNC IN `informativeness()`, which this calls
+# *** utility(utt, obj, objects) ****************
+
+# THIS ALSO NEEDS FIXED (RELATED TO `utility()`)
+# *** informativeness(utt, dist_func=NA, obj)
+
+# THIS NEEDS FIXED IN THE FONXE FILE BEFORE CAN BE USED...
+# *** eqnS4(utt, obj, objects, words)   # 1.999856 <-- shd be same as eqn2()
 
 
 
 ```
+
+
+
+
+
+
+<style>
+<!-- /* use this to get font import code: http://fonts.googleapis.com/css?family=FONT+NAME*/ -->
+<!-- /* use **latin**, not latin-extended */ -->
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Sans Pro Regular'), local('SourceSansPro-Regular'), url(https://fonts.gstatic.com/s/sourcesanspro/v11/ODelI1aHBYDBqgeIAH2zlJbPFduIYtoLzwST68uhz_Y.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;
+}
+
+
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto Mono'), local('RobotoMono-Regular'), url(https://fonts.gstatic.com/s/robotomono/v5/hMqPNLsu_dywMa4C_DEpY4gp9Q8gbYrhqGlRav_IXfk.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;
+}
+
+
+body {
+  padding: 10px;
+  font-size: 12pt;
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+h4 {
+  margin-top: 32px;
+  font-weight: bold;
+}
+
+blockquote {
+  font-size: 12pt;
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+code {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+}
+
+pre {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+}
+
+.table {
+  width: 75%;
+  align: center;
+}
+
+
+h3.subtitle {
+  font-size: 26px;
+  /*color: #aca39a;*/
+  font-style: normal !important;
+  font-weight: lighter !important;
+  border-bottom: none;
+  padding-top: 4px !important;
+}
+
+h4.author { 
+  font-size: 22px;
+  color: #aca39a;
+  font-weight: lighter !important;
+  padding-top: 0px !important;
+  margin-top: 2px !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+h3 {
+  margin-top: 42px;
+}
+
+h2 {
+  margin-top: 48px;
+  border-bottom: 2px solid; 
+}
+
+
+
+
+</style>
+
+
+
 

@@ -1,0 +1,174 @@
+---
+title: ""
+output: pdf_document
+font_size: 10pt
+geometry: margin=.25in
+---
+
+
+## RSA math cheatsheet (material from Frank and Goodman 2012 -- see paper for context)
+
+#### Equation 1 (FG2012) -- posterior probability 
+
+
+$$P(r_s|w, C) = \frac{P(w|r_s, C)\times P(r_s)}{\sum\limits_{r'\in C} P(w|r', C) \times P(r')}$$
+
+*(i)* $r_s$ is an intended referent (element of $C$); *(ii)* $C$ is a context (set of objects $r, r', ...\in C$); *(iii)* $w$ is the word uttered by the speaker; *(iv)* the **prior** is $P(r_s)$; *(v)* the **likelihood** is $P(w|r_s, C)$; and *(vi)* the **normalizing constant** is $\sum\limits_{r'\in C} P(w|r', C) \times P(r')$
+
+
+#### Equation 2 (FG2012) -- likelihood for FG12 (derived from formulas below)
+
+$$P(w|r_s, C) = \frac{|w|^{-1}}{\sum\limits_{w'\in W} |w'|^{-1}}$$
+
+- $|w|$ is the number of objects in $C$ to which word $w$ could(?) apply, 
+- and $W$ is the set of words that apply to the intended referent $r_s$.  
+
+
+#### Equation S1 (FG12 supplement) 
+
+
+$$P(w|r_s, C) \propto e^{\alpha\times U(w; r_s, C)}$$
+
+*(i)* the **context** $C = \{o_1, ..., o_n\}$ is a set of objects; *(ii)* the **vocabulary** is a set of words $V = \{w_1, ..., w_m\}$; *(iii)* each word $w\in V$ has a meaning $[\![ w ]\!] : C \rightarrow \{0, 1\}$; and *(iv)* words are chosen in proportion to their expected utility 
+
+
+#### Equation S2 -- utility (FG12 supplement)
+
+$$U(w; r_s, C) = I(w; r_s, C) - D(w)$$
+
+
+
+where $I(w; r_s, C)$ is the informativeness of utterance $w$ w.r.t. intended referent $r_s \in C$; and $D(w)$ is $w$'s cost (in $C$?). 
+
+
+<br>
+
+#### Surprisal (FG12 supplement), for a sample $x$ from a known distribution $p(x)$ 
+$$I_p(x) = -log(p(x))$$
+
+<br>
+
+#### Utility and surprisal (FG12 supplement) -- utility decreases with surprisal
+
+$$I(w; r_s, C) = -I_{\widetilde{w}_C}(r_s)$$
+
+where $\widetilde{w}_C$ is the distribution over objects that would come froma  aliteral interpretation of $w$ in context $C$. 
+
+
+<br>
+
+#### Equation S3 -- literal listener model derivation (FG12, supplementary materials)
+
+"if listeners interpret the utterance $w$ literally, assigning zero probability to objects for which the word is false, they assign equal probability to each object conssitent with $w$. This distribution over objects can be written:"
+
+
+$$\widetilde{w}_C(o) = \frac{1}{|w|} \textrm{ if } w(o) = true \textrm{, and otherwise } 0$$
+
+
+<!-- $$\widetilde{w}_C(o) =  -->
+<!--     \begin{cases} -->
+<!--     \frac{1}{|w|} & \text{if } w(o) = true\\\\ -->
+<!--     0             & \text{otherwise } -->
+<!--     \end{cases}$$ -->
+
+
+<br>
+
+#### Equation S4 -- listener likelihood (FG12, supplement)
+
+equation S4 follows from S1-S3, which is equivalent to equation 2 (aka "the size principle")
+
+
+$$P(w|r_s, C) = \frac
+                    {e^{-(-\log(|w|^{-1}))}}
+                    {\sum\limits_{w'\in V \text{s.t. } w'(r_s) = true} e^{-(-\log(|w'|^{-1}))}}$$
+
+
+
+
+
+<style>
+<!-- /* use this to get font import code: http://fonts.googleapis.com/css?family=FONT+NAME*/ -->
+<!-- /* use **latin**, not latin-extended */ -->
+@font-face {
+  font-family: 'Source Sans Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Sans Pro Regular'), local('SourceSansPro-Regular'), url(https://fonts.gstatic.com/s/sourcesanspro/v11/ODelI1aHBYDBqgeIAH2zlJbPFduIYtoLzwST68uhz_Y.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;
+}
+
+
+@font-face {
+  font-family: 'Roboto Mono';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Roboto Mono'), local('RobotoMono-Regular'), url(https://fonts.gstatic.com/s/robotomono/v5/hMqPNLsu_dywMa4C_DEpY4gp9Q8gbYrhqGlRav_IXfk.woff2) format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2212, U+2215;
+}
+
+
+body {
+  padding: 10px;
+  font-size: 12pt;
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+h4 {
+  margin-top: 32px;
+  font-weight: bold;
+}
+
+blockquote {
+  font-size: 12pt;
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+code {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+}
+
+pre {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+}
+
+.table {
+  width: 75%;
+  align: center;
+}
+
+
+h3.subtitle {
+  font-size: 26px;
+  /*color: #aca39a;*/
+  font-style: normal !important;
+  font-weight: lighter !important;
+  border-bottom: none;
+  padding-top: 4px !important;
+}
+
+h4.author { 
+  font-size: 22px;
+  color: #aca39a;
+  font-weight: lighter !important;
+  padding-top: 0px !important;
+  margin-top: 2px !important;
+  margin-bottom: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+h3 {
+  margin-top: 42px;
+}
+
+h2 {
+  margin-top: 48px;
+  border-bottom: 2px solid; 
+}
+
+
+
+
+</style>
