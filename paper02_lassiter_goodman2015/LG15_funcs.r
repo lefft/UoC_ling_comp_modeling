@@ -8,9 +8,9 @@ prior_A <- function(A){
 }
 
 
-cost_u <- function(u){
+cost_u <- function(u, force_to_be=2){
   stopifnot(u %in% c("none", "some", "all"))
-  return(2)
+  return(force_to_be)
   # technically it's this but let's keep it simple 
   # 2/3 * length(u)
 }
@@ -54,10 +54,12 @@ S1_utility <- function(u, A){
 S1_prob <- function(u, A, uAlt, alpha=4, norm=FALSE){
   # probability of choosing utterance u from Alt, given state A 
   # e.g. probability of saying 'some' given i ate 3 
-  numerator <- exp(alpha * S1_utility(u, A))
+  numerator <- ifelse(
+    S1_utility(u, A) == 0, 0, exp(alpha * S1_utility(u, A))
+  )
   
   denominator <- sum(sapply(uAlt, function(u_prime){
-    exp(alpha * S1_utility(u_prime, A))
+    ifelse(S1_utility(u_prime, A)==0, 0, exp(alpha * S1_utility(u_prime, A)))
   }))
   
   if (!norm){
@@ -86,8 +88,9 @@ L1_prob <- function(A, u, uAlt, A_space, alpha=4, norm=FALSE){
   }
 }
 
+
 cost_u <- function(u){
-  return(2)
+  return(4)
 }
 
 
@@ -157,6 +160,38 @@ rsaplot <- function(smat, costs, priors, alpha, facet_words=TRUE){
 }
 
 
+# NOTE: THIS IS MODIFIED TO FIT EQNS 10 AND 11 FROM LG15 
+informativity <- function(prob, cost, alpha=1){
+  # `prob` must be a probability 
+  stopifnot(prob >= 0, prob <= 1)
+  inform <- ifelse(prob == 0, 0, exp(alpha * (log(prob) - cost)))
+  return(inform)
+}
+
+# alpha determines/affects how much the probability of an event/proposition/thingy affects the informativity
+probz <- seq(from=0, to=1, by=.01) 
+plot(probz, sapply(probz, function(p) informativity(prob=p, cost=1, alpha=.01)))
+
+plot(probz, sapply(probz, function(p) informativity(prob=p, cost=100, alpha=1)))
+# the more costly an utterance is, then the less the probability matters for its informativity 
+
+
+sapply(probz, function(p) informativity(prob=p, cost=1, alpha=1))
+
+plot(function(p) informativity(prob=p, cost=1, alpha=1), from=0, to=1)
+
+# utility is just informativity minus cost 
+# informativity is just -surprisal 
+# surprsial is just -log(prob) 
+# therefore: informativity is just log(prob) 
+
+
+
+# informativity with worlds is monotonic with the information 
+# theoretic notion of informativity (defn'd via entropy) 
+# 
+# 
+# 
 
 
 

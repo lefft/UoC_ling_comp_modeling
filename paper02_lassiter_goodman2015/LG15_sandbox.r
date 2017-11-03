@@ -1,4 +1,4 @@
-lefftpack::lazy_setup()
+lefftpack::lazy_setup() # dplyr, magrittr, reshape2, ggplot2 
 source("LG15_funcs.r")
 
 
@@ -6,22 +6,58 @@ source("LG15_funcs.r")
 
 ### SCALAR IMPLICATURE EXAMPLE 
 u_space <- c("none", "some", "all") # the space of u's (words)
-A_space <- c(0, 1, 2, 3, 4, 5, 6) # the space of A's (num cookies)
+A_space <- c(0, 1, 2, 3, 4, 5, 6)   # the space of A's (num cookies)
 
+### LITERAL LISTENER INTERPRETATION WITH L0_prob()
 ### p11
 # - A = 0 
-L0_prob(A=0, u="none") == 1
-L0_prob(A=0, u="some") == 0
-L0_prob(A=0, u="all") == 0
+L0_prob(A=0, u="none")
+L0_prob(A=0, u="some")
+L0_prob(A=0, u="all")
 
-S1_prob(u="some", A=1, uAlt=u_space)
 
-# PATTERN IS RIGHT BUT 0/1 FLIPPED! 
+sapply(u_space, function(u){
+  sapply(A_space, function(A) L0_prob(A=A, u=u))
+})
+
+### PRIOR OVER NUMBER OF COOKIES EATEN WITH A_prior()
+sapply(A_space, function(A) prior_A(A=A))
+
+
+### APPLY EQUATION 16 TO GET SOMETHING PROPORTIONAL TO THE SPEAKER PROB OF u|A
+# eqn 10 and 11 combined (utilty plugged into 11)
+eqn16 <- function(u, A){
+  if (L0_prob(A, u) == 0){
+    return(0)
+  } else {
+    exp(4 * (log(L0_prob(A, u)) - 4))
+  }
+}
+
+# the unnormalized prob 
+eqn16(u="none", A=0) 
+S1_prob(u="none", A=0, uAlt=u_space, norm=FALSE)
+
+# top of page12 says this should be the normalized prob of "none" given A=0
+eqn16(u="none", A=0) / sum(sapply(u_space, function(u) eqn16(u=u, A=0)))
+S1_prob(u="none", A=0, uAlt=u_space, norm=TRUE)
+
+
+
+# ex18, close to bottom of p12 [correct]
+L0_prob(A=1, u="some") # .166667
+# bottom of page12, P_S1(SOME|n=1) ... [correct]
+S1_prob(u="some", A=1, uAlt=u_space) # 8.68327e-11
+
+
+# NO LONGER FLIPPED, BC WE ADDED IFELSE CLAUSE TO THE DEFN OF S1_PROB() 
+# [IF YOU USE LG15 DESCRIPTION, 0 AND 1 GET FLIPPED] 
 sapply(u_space, function(u){
   sapply(A_space, function(A){
     S1_prob(u=u, A=A, uAlt=u_space, alpha=4)
   })
 })
+
 
 # THE WRONG SIGN IN HERE THIS SEEMS TO BE THE CULPRIT(?!) 
 # (but also qualitatively seems weird...)
@@ -31,8 +67,18 @@ sapply(u_space, function(u){
   })
 })
 
-# SAME SIGN PROBLEM HERE 
+
+
+# THESE JUST GIVE THE PRIORS BUT WITH NA'S INSTEAD OF ZEROS WHEN NORM=TRUE, 
+# BUT WHEN NORM=FALSE IT GIVES REASONABLE-LOOKING PROBABILITIES...
+# GIVES REASONA
 # probability of A given that u is true 
+# 
+# 
+### THE PROBLEM IS PROBABLY THAT YOU TRY TO DIVIDE ZERO BY ZERO, WHICH 
+### WILL GIVE YOU NAN'S -- SO NEED TO HAVE A CLAUSE WHICH SAYS THAT 
+### IF THE NUMERATOR IS ZERO, THEN JUST RETURN ZERO, REGARDLESS OF WHETHER 
+### NORM=TRUE OR NORM=FALSE
 sapply(u_space, function(u){
   sapply(A_space, function(A){
     try(L1_prob(A=A, u=u, uAlt=u_space, A_space=A_space, alpha=4, norm=TRUE))
