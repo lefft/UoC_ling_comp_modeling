@@ -1,5 +1,9 @@
 ############ FUNCTIONS FOR LASSITER AND GOODMAN (2015) PAPER ------------------
 
+
+
+### FIRST STAB AT CLEAN, UNIFORM SUITE OF FUNCS -------------------------------
+
 # number of cookies eaten, priors for each value 
 prior_A <- function(A){
   stopifnot(A %in% 0:6)
@@ -96,6 +100,18 @@ cost_u <- function(u){
 
 
 
+
+### AD HOC FUNCTIONS FOR SPECIFIC FORMULAS/EQN'S IN PAPER ---------------------
+eqn16 <- function(u, A){
+  if (L0_prob(A, u) == 0){
+    return(0)
+  } else {
+    exp(4 * (log(L0_prob(A, u)) - 4))
+  }
+}
+
+# modified log that returns 0 for argument 0 (instead of inf)
+log_ <- function(x) if (x==0) return(0) else return(log(x))
 
 
 
