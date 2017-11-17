@@ -169,29 +169,25 @@ informativity <- function(prob, cost, alpha=1){
 }
 
 # alpha determines/affects how much the probability of an event/proposition/thingy affects the informativity
-probz <- seq(from=0, to=1, by=.01) 
-plot(probz, sapply(probz, function(p) informativity(prob=p, cost=1, alpha=.01)))
+#   probz <- seq(from=0, to=1, by=.01) 
+#   plot(probz, sapply(probz, function(p) informativity(prob=p, cost=1, alpha=.01)))
 
-plot(probz, sapply(probz, function(p) informativity(prob=p, cost=100, alpha=1)))
+#   plot(probz, sapply(probz, function(p) informativity(prob=p, cost=100, alpha=1)))
 # the more costly an utterance is, then the less the probability matters for its informativity 
 
 
-sapply(probz, function(p) informativity(prob=p, cost=1, alpha=1))
+#   sapply(probz, function(p) informativity(prob=p, cost=1, alpha=1))
 
-plot(function(p) informativity(prob=p, cost=1, alpha=1), from=0, to=1)
+#   plot(function(p) informativity(prob=p, cost=1, alpha=1), from=0, to=1)
+
 
 # utility is just informativity minus cost 
 # informativity is just -surprisal 
 # surprsial is just -log(prob) 
 # therefore: informativity is just log(prob) 
-
-
-
+# 
+#   
+# insight from julian convo: 
 # informativity with worlds is monotonic with the information 
 # theoretic notion of informativity (defn'd via entropy) 
 # 
-# 
-# 
-
-
-
