@@ -12,7 +12,7 @@ prior_A <- function(A){
 }
 
 
-cost_u <- function(u, force_to_be=2){
+cost_u <- function(u, force_to_be=4){
   stopifnot(u %in% c("none", "some", "all"))
   return(force_to_be)
   # technically it's this but let's keep it simple 

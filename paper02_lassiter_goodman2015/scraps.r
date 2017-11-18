@@ -1,4 +1,25 @@
 
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
+# possible notion of entailment: "whenever there is non-zero prob in word A, 
+# that prob is larger than the corresponding prob in word B" 
+normalize <- function(x) x / sum(x)
+
+sapply(u_space, function(u){
+  sapply(A_space, function(A){
+    L0_prob(A, u)
+  })
+}) %>% apply(MARGIN=1, normalize) %>% t
+
+sapply(u_space, function(u){
+  sapply(A_space, function(A){
+    L1_prob(A, u, uAlt=u_space, A_space=A_space, norm=FALSE)
+  })
+}) %>% apply(MARGIN=1, normalize) %>% t()
+### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### ### 
+
+
+
+
 ### LITERAL LISTENER INTERPRETATION WITH L0_prob()
 ### p11-12
 # 
